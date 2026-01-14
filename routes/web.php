@@ -14,3 +14,4 @@ Route::post('/items', [ItemController::class, 'store'])->name('items.store');
 Route::post('/items/{item}/update-quantity', [ItemController::class, 'updateQuantity'])->name('items.updateQuantity');
 Route::get('/items/{item}/history', [ItemController::class, 'history'])->name('items.history');
 Route::post('/items/add-multiple', [ItemController::class, 'addMultiple']);
+Route::post('/items/deduct-multiple', [\App\Http\Controllers\ItemController::class, 'deductMultiple']);

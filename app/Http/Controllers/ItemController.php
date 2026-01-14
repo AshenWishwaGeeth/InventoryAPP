@@ -99,4 +99,34 @@ class ItemController extends Controller {
 
         return redirect()->back()->with('success', 'Items added successfully!');
     }
+
+    public function deductMultiple(Request $request)
+    {
+        $deductions = $request->input('deductions', []);
+        $errors = [];
+        foreach ($deductions as $deduct) {
+            $item = \App\Models\Item::find($deduct['id']);
+            $qty = $deduct['quantity'] ?? 0;
+            if (!$item || $qty <= 0) {
+                continue;
+            }
+            if ($qty > $item->quantity) {
+                $errors[] = "Cannot deduct more than available for {$item->name}";
+                continue;
+            }
+            $item->quantity -= $qty;
+            $item->save();
+
+            \App\Models\InventoryTransaction::create([
+                'item_id' => $item->id,
+                'type' => 'deduction',
+                'quantity' => $qty,
+            ]);
+        }
+
+        if ($errors) {
+            return redirect()->back()->withErrors(['deduct_multiple' => implode(', ', $errors)]);
+        }
+        return redirect()->back()->with('success', 'Items deducted successfully!');
+    }
 }
