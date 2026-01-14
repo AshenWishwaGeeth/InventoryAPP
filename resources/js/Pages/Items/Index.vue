@@ -55,7 +55,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="item in items" :key="item.id" class="hover:bg-gray-50">
+          <tr v-for="item in filteredItems" :key="item.id" class="hover:bg-gray-50">
             <td class="border px-3 py-2">{{ item.name }}</td>
             <td class="border px-3 py-2">{{ item.unit }}</td>
             <td class="border px-3 py-2 text-right">{{ item.quantity }}</td>
@@ -119,7 +119,7 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue';
+import { ref, reactive, computed } from 'vue';
 import { Inertia } from '@inertiajs/inertia';
 import { usePage } from '@inertiajs/inertia-vue3';
 
@@ -130,8 +130,22 @@ const message = ref(props.flash?.success || '');
 const search = ref('');
 const newItem = ref({ name: '', unit: '', quantity: 0 });
 
+// Filtered items based on search
+const filteredItems = computed(() => {
+  if (!search.value) return items.value;
+  // Find exact match (case-insensitive)
+  const found = items.value.find(
+    i => i.name.trim().toLowerCase() === search.value.trim().toLowerCase()
+  );
+  return found ? [found] : [];
+});
+
 function fetchItems() {
-  Inertia.get('/items', { search: search.value }, { preserveState: true, replace: true });
+  // Only fetch from server if search is empty, otherwise filter locally
+  if (!search.value) {
+    Inertia.get('/items', {}, { preserveState: true, replace: true });
+  }
+  // Otherwise, filtering is handled by computed property
 }
 
 function addItem() {
