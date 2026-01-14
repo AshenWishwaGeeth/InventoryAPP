@@ -66,4 +66,37 @@ class ItemController extends Controller {
             'transactions' => $transactions,
         ]);
     }
+
+    public function addMultiple(Request $request)
+    {
+        $items = $request->input('items', []);
+        $inserted = [];
+
+        foreach ($items as $item) {
+            if (
+                !empty($item['name']) &&
+                !empty($item['unit']) &&
+                isset($item['quantity']) &&
+                $item['quantity'] > 0
+            ) {
+                // Prevent duplicate names (case-insensitive)
+                $exists = \App\Models\Item::whereRaw('LOWER(name) = ?', [strtolower($item['name'])])->exists();
+                if (!$exists) {
+                    $inserted[] = [
+                        'name' => $item['name'],
+                        'unit' => $item['unit'],
+                        'quantity' => $item['quantity'],
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }
+            }
+        }
+
+        if (!empty($inserted)) {
+            \App\Models\Item::insert($inserted);
+        }
+
+        return redirect()->back()->with('success', 'Items added successfully!');
+    }
 }

@@ -23,8 +23,11 @@
 
     <!-- Add Items Form (Single) -->
     <div class="card shadow mb-5">
-      <div class="card-header bg-primary text-white">
+      <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
         <h2 class="h5 mb-0">Add Item</h2>
+        <button @click="showAddMultipleModal = true" class="btn btn-outline-light btn-sm ms-2">
+          <i class="bi bi-plus-square"></i> Add Multiple Items
+        </button>
       </div>
       <div class="card-body">
         <form @submit.prevent="addItem">
@@ -45,6 +48,45 @@
             </div>
           </div>
         </form>
+      </div>
+    </div>
+
+    <!-- Add Multiple Items Modal -->
+    <div v-if="showAddMultipleModal" class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,0.4);z-index:1050;">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title">Add Multiple Items</h5>
+            <button type="button" class="btn-close btn-close-white" @click="showAddMultipleModal = false"></button>
+          </div>
+          <form @submit.prevent="addMultipleItems">
+            <div class="modal-body">
+              <div v-for="(item, idx) in multipleItems" :key="idx" class="row g-2 align-items-center mb-2">
+                <div class="col-md-5">
+                  <input v-model="item.name" placeholder="Item Name" required class="form-control" />
+                </div>
+                <div class="col-md-3">
+                  <input v-model="item.unit" placeholder="Unit (Kg, pcs, etc.)" required class="form-control" />
+                </div>
+                <div class="col-md-2">
+                  <input v-model.number="item.quantity" type="number" step="0.01" min="0.01" placeholder="Quantity" required class="form-control" />
+                </div>
+                <div class="col-md-2 d-flex">
+                  <button type="button" class="btn btn-danger btn-sm me-1" @click="removeMultipleItem(idx)">
+                    <i class="bi bi-x"></i>
+                  </button>
+                  <button type="button" class="btn btn-success btn-sm" v-if="idx === multipleItems.length - 1" @click="addMultipleItemRow">
+                    <i class="bi bi-plus"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" @click="showAddMultipleModal = false" class="btn btn-secondary">Cancel</button>
+              <button type="submit" class="btn btn-primary">Add Items</button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
 
@@ -213,6 +255,31 @@ function deductMultipleItems() {
       Object.keys(multiDeduct).forEach(k => multiDeduct[k] = 0);
       showDeductModal.value = false;
       message.value = 'Items deducted successfully!';
+    }
+  });
+}
+
+// Add Multiple Items Modal logic
+const showAddMultipleModal = ref(false);
+const multipleItems = ref([
+  { name: '', unit: '', quantity: 0 }
+]);
+function addMultipleItemRow() {
+  multipleItems.value.push({ name: '', unit: '', quantity: 0 });
+}
+function removeMultipleItem(idx) {
+  if (multipleItems.value.length > 1) multipleItems.value.splice(idx, 1);
+}
+function addMultipleItems() {
+  // Filter out empty rows
+  const itemsToAdd = multipleItems.value
+    .filter(i => i.name && i.unit && i.quantity > 0);
+  if (!itemsToAdd.length) return;
+  Inertia.post('/items/add-multiple', { items: itemsToAdd }, {
+    onSuccess: () => {
+      multipleItems.value = [{ name: '', unit: '', quantity: 0 }];
+      showAddMultipleModal.value = false;
+      message.value = 'Items added successfully!';
     }
   });
 }
