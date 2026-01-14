@@ -1,6 +1,6 @@
 <template>
   <div class="max-w-5xl mx-auto py-8">
-    <h1 class="text-3xl font-bold mb-6 text-gray-800">Inventory Management</h1>
+    <h1 class="text-3xl font-bold mb-6 text-gray-800">Inventory Management </h1>
 
     <!-- Feedback Message -->
     <div v-if="message" class="mb-4 p-3 rounded bg-green-100 text-green-800 border border-green-300">
@@ -20,24 +20,18 @@
       </button>
     </div>
 
-    <!-- Add Items Form (Multiple) -->
+    <!-- Add Items Form (Single) -->
     <div class="bg-white shadow rounded p-6 mb-8">
-      <h2 class="text-xl font-semibold mb-4 text-gray-700">Add Items</h2>
-      <form @submit.prevent="addItems">
-        <div v-for="(item, idx) in newItems" :key="idx" class="flex items-center mb-2 space-x-2">
-          <input v-model="item.name" placeholder="Item Name" required class="border rounded px-2 py-1 flex-1" />
-          <input v-model="item.unit" placeholder="Unit (Kg, pcs, etc.)" required class="border rounded px-2 py-1 w-32" />
-          <input v-model.number="item.quantity" type="number" step="0.01" min="0.01" placeholder="Quantity" required class="border rounded px-2 py-1 w-28" />
-          <button v-if="newItems.length > 1" type="button" @click="removeNewItem(idx)" class="text-red-500 hover:text-red-700 px-2">
-            &times;
-          </button>
+      <h2 class="text-xl font-semibold mb-4 text-gray-700">Add Item</h2>
+      <form @submit.prevent="addItem">
+        <div class="flex items-center mb-2 space-x-2">
+          <input v-model="newItem.name" placeholder="Item Name" required class="border rounded px-2 py-1 flex-1" />
+          <input v-model="newItem.unit" placeholder="Unit (Kg, pcs, etc.)" required class="border rounded px-2 py-1 w-32" />
+          <input v-model.number="newItem.quantity" type="number" step="0.01" min="0.01" placeholder="Quantity" required class="border rounded px-2 py-1 w-28" />
         </div>
         <div class="flex space-x-2 mt-2">
-          <button type="button" @click="addNewItemRow" class="bg-gray-200 px-3 py-1 rounded hover:bg-gray-300 text-gray-700">
-            + Add Row
-          </button>
           <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
-            Add Items
+            Add Item
           </button>
         </div>
       </form>
@@ -134,29 +128,17 @@ const items = ref(props.items || []);
 const message = ref(props.flash?.success || '');
 
 const search = ref('');
-const newItems = ref([
-  { name: '', unit: '', quantity: 0 }
-]);
-
-function addNewItemRow() {
-  newItems.value.push({ name: '', unit: '', quantity: 0 });
-}
-function removeNewItem(idx) {
-  newItems.value.splice(idx, 1);
-}
+const newItem = ref({ name: '', unit: '', quantity: 0 });
 
 function fetchItems() {
   Inertia.get('/items', { search: search.value }, { preserveState: true, replace: true });
 }
 
-function addItems() {
-  // Filter out empty rows
-  const payload = newItems.value.filter(i => i.name && i.unit && i.quantity > 0);
-  if (!payload.length) return;
-  Inertia.post('/items', { items: payload }, {
+function addItem() {
+  Inertia.post('/items', newItem.value, {
     onSuccess: () => {
-      newItems.value = [{ name: '', unit: '', quantity: 0 }];
-      message.value = 'Items added successfully!';
+      newItem.value = { name: '', unit: '', quantity: 0 };
+      message.value = 'Item added successfully!';
     }
   });
 }
@@ -211,7 +193,3 @@ function openHistory(item) {
   });
 }
 </script>
-
-<style scoped>
-/* Add any custom styles if needed */
-</style>
