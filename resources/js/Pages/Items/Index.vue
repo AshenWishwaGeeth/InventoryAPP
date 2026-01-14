@@ -1,117 +1,148 @@
 <template>
-  <div class="max-w-5xl mx-auto py-8">
-    <h1 class="text-3xl font-bold mb-6 text-gray-800">Inventory Management </h1>
+  <div class="container py-5">
+    <h1 class="display-4 mb-4 text-primary fw-bold text-center">Inventory Management</h1>
 
     <!-- Feedback Message -->
-    <div v-if="message" class="mb-4 p-3 rounded bg-green-100 text-green-800 border border-green-300">
+    <div v-if="message" class="alert alert-success alert-dismissible fade show" role="alert">
       {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" @click="message = ''"></button>
     </div>
 
     <!-- Search Bar -->
-    <div class="flex items-center mb-6">
+    <div class="input-group mb-4">
       <input
         v-model="search"
         @input="fetchItems"
         placeholder="Search item by name..."
-        class="flex-1 border rounded-l px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+        class="form-control"
       />
-      <button @click="fetchItems" class="bg-blue-600 text-white px-4 py-2 rounded-r hover:bg-blue-700">
-        Search
+      <button @click="fetchItems" class="btn btn-primary">
+        <i class="bi bi-search"></i> Search
       </button>
     </div>
 
     <!-- Add Items Form (Single) -->
-    <div class="bg-white shadow rounded p-6 mb-8">
-      <h2 class="text-xl font-semibold mb-4 text-gray-700">Add Item</h2>
-      <form @submit.prevent="addItem">
-        <div class="flex items-center mb-2 space-x-2">
-          <input v-model="newItem.name" placeholder="Item Name" required class="border rounded px-2 py-1 flex-1" />
-          <input v-model="newItem.unit" placeholder="Unit (Kg, pcs, etc.)" required class="border rounded px-2 py-1 w-32" />
-          <input v-model.number="newItem.quantity" type="number" step="0.01" min="0.01" placeholder="Quantity" required class="border rounded px-2 py-1 w-28" />
-        </div>
-        <div class="flex space-x-2 mt-2">
-          <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
-            Add Item
-          </button>
-        </div>
-      </form>
-    </div>
-
-    <!-- Inventory Table -->
-    <div class="bg-white shadow rounded p-6">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-xl font-semibold text-gray-700">Inventory List</h2>
-        <button @click="showDeductModal = true" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
-          Deduct Multiple Items
-        </button>
+    <div class="card shadow mb-5">
+      <div class="card-header bg-primary text-white">
+        <h2 class="h5 mb-0">Add Item</h2>
       </div>
-      <table class="w-full border rounded overflow-hidden">
-        <thead class="bg-gray-100">
-          <tr>
-            <th class="border px-3 py-2 text-left">Name</th>
-            <th class="border px-3 py-2 text-left">Unit</th>
-            <th class="border px-3 py-2 text-right">Quantity</th>
-            <th class="border px-3 py-2 text-center">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="item in filteredItems" :key="item.id" class="hover:bg-gray-50">
-            <td class="border px-3 py-2">{{ item.name }}</td>
-            <td class="border px-3 py-2">{{ item.unit }}</td>
-            <td class="border px-3 py-2 text-right">{{ item.quantity }}</td>
-            <td class="border px-3 py-2 text-center space-x-2">
-              <form @submit.prevent="updateQuantity(item, 'addition')" class="inline-flex items-center space-x-1">
-                <input v-model.number="item.addQty" type="number" placeholder="Qty" min="0.01" step="0.01" class="border rounded px-2 py-1 w-20"/>
-                <button type="submit" class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600">Add</button>
-              </form>
-              <form @submit.prevent="updateQuantity(item, 'deduction')" class="inline-flex items-center space-x-1">
-                <input v-model.number="item.deductQty" type="number" placeholder="Qty" min="0.01" step="0.01" class="border rounded px-2 py-1 w-20"/>
-                <button type="submit" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">Deduct</button>
-              </form>
-              <button @click="openHistory(item)" class="text-blue-600 underline hover:text-blue-800">History</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Deduct Multiple Items Modal -->
-    <div v-if="showDeductModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-      <div class="bg-white rounded shadow-lg p-6 w-full max-w-2xl">
-        <h3 class="text-lg font-semibold mb-4">Deduct Multiple Items</h3>
-        <form @submit.prevent="deductMultipleItems">
-          <div v-for="item in items" :key="item.id" class="flex items-center mb-2 space-x-2">
-            <span class="w-40">{{ item.name }} ({{ item.unit }})</span>
-            <input v-model.number="multiDeduct[item.id]" type="number" min="0.01" step="0.01" placeholder="Qty" class="border rounded px-2 py-1 w-24"/>
-          </div>
-          <div class="flex justify-end space-x-2 mt-4">
-            <button type="button" @click="showDeductModal = false" class="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300">Cancel</button>
-            <button type="submit" class="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700">Deduct</button>
+      <div class="card-body">
+        <form @submit.prevent="addItem">
+          <div class="row g-2 align-items-center mb-3">
+            <div class="col-md-5">
+              <input v-model="newItem.name" placeholder="Item Name" required class="form-control" />
+            </div>
+            <div class="col-md-3">
+              <input v-model="newItem.unit" placeholder="Unit (Kg, pcs, etc.)" required class="form-control" />
+            </div>
+            <div class="col-md-2">
+              <input v-model.number="newItem.quantity" type="number" step="0.01" min="0.01" placeholder="Quantity" required class="form-control" />
+            </div>
+            <div class="col-md-2 d-grid">
+              <button type="submit" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Add Item
+              </button>
+            </div>
           </div>
         </form>
       </div>
     </div>
 
-    <!-- Item History Modal -->
-    <div v-if="showHistoryModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-      <div class="bg-white rounded shadow-lg p-6 w-full max-w-lg">
-        <h3 class="text-lg font-semibold mb-4">History for {{ historyItem?.name }}</h3>
-        <div v-if="loadingHistory" class="text-gray-500">Loading...</div>
-        <div v-else>
-          <ul class="divide-y">
-            <li v-for="h in itemHistory" :key="h.id" class="py-2 flex justify-between">
-              <span>
-                <span :class="h.type === 'addition' ? 'text-green-600' : 'text-red-600'">
-                  {{ h.type === 'addition' ? '+' : '-' }}{{ h.quantity }}
-                </span>
-                <span class="ml-2 text-gray-700">{{ h.unit }}</span>
-              </span>
-              <span class="text-gray-500 text-sm">{{ h.created_at }}</span>
-            </li>
-          </ul>
+    <!-- Inventory Table -->
+    <div class="card shadow">
+      <div class="card-header d-flex justify-content-between align-items-center bg-light">
+        <h2 class="h5 mb-0 text-primary">Inventory List</h2>
+        <button @click="showDeductModal = true" class="btn btn-danger">
+          <i class="bi bi-dash-circle"></i> Deduct Multiple Items
+        </button>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-primary">
+            <tr>
+              <th>Name</th>
+              <th>Unit</th>
+              <th class="text-end">Quantity</th>
+              <th class="text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="item in filteredItems" :key="item.id">
+              <td>{{ item.name }}</td>
+              <td>{{ item.unit }}</td>
+              <td class="text-end">{{ item.quantity }}</td>
+              <td class="text-center">
+                <form @submit.prevent="updateQuantity(item, 'addition')" class="d-inline-flex align-items-center me-2">
+                  <input v-model.number="item.addQty" type="number" placeholder="Qty" min="0.01" step="0.01" class="form-control form-control-sm me-1" style="width: 80px;"/>
+                  <button type="submit" class="btn btn-success btn-sm"><i class="bi bi-plus"></i> Add</button>
+                </form>
+                <form @submit.prevent="updateQuantity(item, 'deduction')" class="d-inline-flex align-items-center me-2">
+                  <input v-model.number="item.deductQty" type="number" placeholder="Qty" min="0.01" step="0.01" class="form-control form-control-sm me-1" style="width: 80px;"/>
+                  <button type="submit" class="btn btn-danger btn-sm"><i class="bi bi-dash"></i> Deduct</button>
+                </form>
+                <button @click="openHistory(item)" class="btn btn-link btn-sm text-decoration-underline text-primary">
+                  <i class="bi bi-clock-history"></i> History
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Deduct Multiple Items Modal -->
+    <div v-if="showDeductModal" class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,0.4);z-index:1050;">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title">Deduct Multiple Items</h5>
+            <button type="button" class="btn-close btn-close-white" @click="showDeductModal = false"></button>
+          </div>
+          <form @submit.prevent="deductMultipleItems">
+            <div class="modal-body">
+              <div v-for="item in items" :key="item.id" class="row align-items-center mb-2">
+                <div class="col-6 col-md-5 fw-semibold">{{ item.name }} ({{ item.unit }})</div>
+                <div class="col-6 col-md-4">
+                  <input v-model.number="multiDeduct[item.id]" type="number" min="0.01" step="0.01" placeholder="Qty" class="form-control"/>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" @click="showDeductModal = false" class="btn btn-secondary">Cancel</button>
+              <button type="submit" class="btn btn-danger">Deduct</button>
+            </div>
+          </form>
         </div>
-        <div class="flex justify-end mt-4">
-          <button @click="showHistoryModal = false" class="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300">Close</button>
+      </div>
+    </div>
+
+    <!-- Item History Modal -->
+    <div v-if="showHistoryModal" class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,0.4);z-index:1050;">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title">History for {{ historyItem?.name }}</h5>
+            <button type="button" class="btn-close btn-close-white" @click="showHistoryModal = false"></button>
+          </div>
+          <div class="modal-body">
+            <div v-if="loadingHistory" class="text-muted">Loading...</div>
+            <div v-else>
+              <ul class="list-group">
+                <li v-for="h in itemHistory" :key="h.id" class="list-group-item d-flex justify-content-between align-items-center">
+                  <span>
+                    <span :class="h.type === 'addition' ? 'text-success fw-bold' : 'text-danger fw-bold'">
+                      {{ h.type === 'addition' ? '+' : '-' }}{{ h.quantity }}
+                    </span>
+                    <span class="ms-2 text-secondary">{{ h.unit }}</span>
+                  </span>
+                  <span class="text-muted small">{{ h.created_at }}</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button @click="showHistoryModal = false" class="btn btn-secondary">Close</button>
+          </div>
         </div>
       </div>
     </div>
